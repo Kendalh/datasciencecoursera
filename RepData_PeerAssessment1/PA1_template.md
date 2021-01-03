@@ -105,14 +105,44 @@ act_imputed$weekday <- f
 Make a panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). 
 
 ```r
-weekday_steps <- with(act_imputed[act_imputed$weekday == "Weekday",], tapply(steps, interval, mean))
-weekday_steps <- data.frame(Interval = names(weekday_steps), Steps = weekday_steps, Weekday = "Weekday")
-weekend_steps <- with(act_imputed[act_imputed$weekday == "Weekend",], tapply(steps, interval, mean))
-weekend_steps <- data.frame(Interval = names(weekend_steps), Steps = weekend_steps, Weekday = "Weekend")
+library(ggplot2)
+library(dplyr)
+```
 
-par(mfrow = c(2,1))
-with(weekday_steps, plot(Interval, Steps, type="l", main = "Weekend Steps"))
-with(weekend_steps, plot(Interval, Steps, type="l", main = "Weekday Steps"))
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:plyr':
+## 
+##     arrange, count, desc, failwith, id, mutate, rename, summarise,
+##     summarize
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
+weekday_steps <- with(act_imputed[act_imputed$weekday == "Weekday",], tapply(steps, interval, mean))
+weekday_steps <- data.frame(Interval = names(weekday_steps), Steps = weekday_steps, Day = "Weekday")
+weekend_steps <- with(act_imputed[act_imputed$weekday == "Weekend",], tapply(steps, interval, mean))
+weekend_steps <- data.frame(Interval = names(weekend_steps), Steps = weekend_steps, Day = "Weekend")
+d <- union(weekday_steps, weekend_steps)
+d$Day <- as.factor(d$Day)
+d$Interval <- as.numeric(d$Interval)
+
+ggplot(d, aes(Interval, Steps)) + geom_line() + facet_wrap(Day~., nrow=2, ncol=1) + labs(x = "Interval", y = "Average Number of Steps")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
