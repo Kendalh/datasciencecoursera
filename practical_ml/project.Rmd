@@ -1,0 +1,95 @@
+---
+title: "Machine Learning Course Project"
+author: "Yiming Huang"
+date: "1/30/2021"
+output: html_document
+---
+
+```{r echo=FALSE,message=FALSE}
+library(caret)
+library(corrplot)
+library(randomForest)
+library(rpart)
+
+set.seed(12345)
+```
+
+## Overview
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.  
+
+The goal of the project is to predict the manner in which they did the exercise. This is the "classe" variable in the training set. The [training](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv) and [testing](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv) data for this project are available here for download.
+
+## Exploratory Data Analysis and Cleaning 
+After importing the training data set, we find there are 160 variables, but a lots of them have plenty of NA. We can use the Near Zero Variance method to remove those variables.
+
+```{r}
+training <- read.csv("pml-training.csv")
+dim(training)
+# remove variables with Nearly Zero Variance
+NZV <- nearZeroVar(training)
+training <- training[, -NZV]
+dim(training)
+```
+
+We also remove the variables that are mostly NAs. 
+```{r}
+# remove variables that are mostly NA
+MOSTNA <- sapply(training, function(x) mean(is.na(x)) > 0.95)
+training <- training[, MOSTNA==FALSE]
+dim(training)
+```
+
+Finally we remove the identification and time variables from column 1 to 5.
+```{r}
+# remove identification only variables (columns 1 to 5)
+training <- training[, -(1:5)]
+dim(training)
+```
+
+A correlation among variables is analyzed before proceeding to the modeling procedures. And highly correlated variables are shown in dark colors, and we also find them as listed. 
+```{r}
+corMatrix <- cor(training[, -54])
+corrplot(corMatrix, order = "FPC", method = "color", type = "lower", tl.cex = 0.6, tl.col = rgb(0, 0, 0))
+highlyCorrelated = findCorrelation(corMatrix, cutoff=0.75)
+names(training)[highlyCorrelated]
+```
+
+To make an even more compact analysis, a PCA (Principal Components Analysis) could be performed as pre-processing step to the datasets. Nevertheless, as the correlations are quite few (53), this step will not be applied for this assignment.
+
+## Model Selections
+First, lets split the original training data set to training and test data set for model building. Treat the original testing data as validation set.
+```{r}
+inTrain  <- createDataPartition(training$classe, p=0.7, list=FALSE)
+trainSet <- training[inTrain, ]
+testSet  <- training[-inTrain, ]
+dim(trainSet)
+```
+
+### Classification Tree
+The first model we will try is a classification tree. Then we predict it against our test data set, it shows that the accuracy is around 73%.
+```{r cache=TRUE}
+mCT <- rpart(classe ~ ., data=trainSet, method="class")
+# prediction on Test dataset
+predictCF <- predict(mCT, newdata=testSet, type="class")
+confusionMatrix(predictCF, as.factor(testSet$classe))
+```
+
+### Random Forest
+Now we try a random forest model with 3 folds cross validation. This time the accuracy against the test data set is around 99%, which is extremely high. And we will choose this model as our final model.
+```{r cache=TRUE}
+# 3 fold cross validation random forest
+controlRF <- trainControl(method="cv", number=3, verboseIter=FALSE)
+mRF <- train(classe ~ ., data=trainSet, method="rf", trControl=controlRF)
+mRF$finalModel
+# prediction on Test dataset
+predictRF <- predict(mRF, newdata=testSet)
+confusionMatrix(predictRF, as.factor(testSet$classe))
+```
+
+## Predict Against the Validation Data Set
+Now we apply the random forest model to the orignal test data set. And below code snippet shows the prediction result.
+```{r}
+testing <- read.csv("pml-testing.csv")
+predictTEST <- predict(mRF, newdata=testing)
+predictTEST
+```
