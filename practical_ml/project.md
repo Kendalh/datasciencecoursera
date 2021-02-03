@@ -104,7 +104,7 @@ dim(trainSet)
 ```
 
 ### Classification Tree
-The first model we will try is a classification tree. Then we predict it against our test data set, it shows that the accuracy is around 73%.
+The first model we will try is a classification tree. Then we predict it against our test data set, it shows that the accuracy is around 73% (aka, out-of-sample error rate 27%). 
 
 ```r
 mCT <- rpart(classe ~ ., data=trainSet, method="class")
@@ -149,7 +149,7 @@ confusionMatrix(predictCF, as.factor(testSet$classe))
 ```
 
 ### Random Forest
-Now we try a random forest model with 3 folds cross validation. This time the accuracy against the test data set is around 99%, which is extremely high. And we will choose this model as our final model.
+Now we try a random forest model with 3 folds cross validation. This time the accuracy against the test data set is around 99% (aka, out of sample error rate 1%), which is extremely high. And we will choose this model as our final model.
 
 ```r
 # 3 fold cross validation random forest

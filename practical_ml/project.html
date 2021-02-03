@@ -469,7 +469,7 @@ dim(trainSet)</code></pre>
 <pre><code>## [1] 13737    54</code></pre>
 <div id="classification-tree" class="section level3">
 <h3>Classification Tree</h3>
-<p>The first model we will try is a classification tree. Then we predict it against our test data set, it shows that the accuracy is around 73%.</p>
+<p>The first model we will try is a classification tree. Then we predict it against our test data set, it shows that the accuracy is around 73% (aka, out-of-sample error rate 27%).</p>
 <pre class="r"><code>mCT &lt;- rpart(classe ~ ., data=trainSet, method=&quot;class&quot;)
 # prediction on Test dataset
 predictCF &lt;- predict(mCT, newdata=testSet, type=&quot;class&quot;)
@@ -509,7 +509,7 @@ confusionMatrix(predictCF, as.factor(testSet$classe))</code></pre>
 </div>
 <div id="random-forest" class="section level3">
 <h3>Random Forest</h3>
-<p>Now we try a random forest model with 3 folds cross validation. This time the accuracy against the test data set is around 99%, which is extremely high. And we will choose this model as our final model.</p>
+<p>Now we try a random forest model with 3 folds cross validation. This time the accuracy against the test data set is around 99% (aka, out of sample error rate 1%), which is extremely high. And we will choose this model as our final model.</p>
 <pre class="r"><code># 3 fold cross validation random forest
 controlRF &lt;- trainControl(method=&quot;cv&quot;, number=3, verboseIter=FALSE)
 mRF &lt;- train(classe ~ ., data=trainSet, method=&quot;rf&quot;, trControl=controlRF)
