@@ -1,0 +1,56 @@
+---
+title: "Shiny Application for Hypothesis Test Simulation"
+author: "Yiming Huang"
+date: "2/4/2021"
+output: slidy_presentation
+---
+
+## Introduction
+
+The Shiny application [Hypothesis Test Simulation](https://kendal.shinyapps.io/HypothesisTestSimulation/) is a simple simulation and explanation for the hypothesis test. It allows you to play around with the observation parameters like mean, variances and sample size as well as the alpha level to test whether you can reject the null hypothesis. 
+
+It will also show you the key indicators like test statistics, confidence interval and the power of the test. 
+
+## Sample Plot
+```{r message=FALSE}
+library(ggplot2)
+mu <- 0
+mua <- 1
+sigma <- 4
+n <- 100
+alpha <- 0.05
+g <- ggplot(data.frame(mu = c(-4, 4)), aes(x = mu))
+g <- g + stat_function(fun = dnorm, geom = "line", 
+                       args = list(mean = mu, sd = sigma / sqrt(n)), 
+                       size = 1, col = "red")
+        g <- g + stat_function(fun = dnorm, geom = "line", 
+                       args = list(mean = mua, sd = sigma / sqrt(n)), 
+                       size = 1, col = "blue")
+        z <- qnorm(1 - alpha/2) * sigma / sqrt(n)
+        xitc <- mu + z
+        g = g + geom_vline(xintercept = xitc, size = 2)
+        g
+```
+
+## Plot Explanation
+* The red curve is the population distribution of the null hypothesis
+* The blue curve is the observed distribution
+* The vertical bar is the zscore given the alpha level
+
+## Calculations and Conclusion
+```{r}
+tstatistic <- (mua - mu) / (sigma / sqrt(n))
+zscore <- qnorm(1 - alpha/2)
+cinterval <-  mua + c(-1,1) * zscore * sigma / sqrt(n)
+power <- pnorm(mu + zscore * sigma/sqrt(n), mean = mua, sd = sigma/sqrt(n), lower.tail = FALSE)
+```
+Test statistic = `r tstatistic`  
+Z Score = `r zscore`  
+Confidence Interval = ( `r cinterval` )  
+Power = `r power`  
+
+**Null Hypothesis:** The population is centered at 0.  
+**Alternative Hypothesis:** The population is not centered at 0.  
+
+With the oberservations, the test statistic is greater than z score, and the confidence interval doesn't include 0. We reject the Null hypothesis and accept the alternative. 
+
